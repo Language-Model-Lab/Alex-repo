@@ -1,1 +1,1 @@
-Read this.
+/notebooks contains some experiments and explanations motivating the project.
