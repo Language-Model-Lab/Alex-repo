@@ -188,18 +188,3 @@ def test_response_extra_fields():
          experimental_latency_ms= 3.32,
          extra_field=23,
       )
-
-test_valid_generation_settings()
-test_invalid_max_tokens()
-test_invalid_top_p()
-test_valid_intervention_settings()
-test_invalid_intervention_type()
-test_invalid_intervention_layers()
-test_valid_request()
-test_valid_request_no_int()
-test_invalid_request_no_prompt()
-test_valid_response()
-test_generation_settings_extra_fields()
-test_intervention_settings_extra_fields()
-test_request_extra_fields()
-test_response_extra_fields()
