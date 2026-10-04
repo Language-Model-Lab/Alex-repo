@@ -37,11 +37,16 @@ def add_head_ablation(model, head_indices: list[int], layer_idx: int):
     return handle, head_indices, layer_idx
 
 
-
-
-
-
 def add_mlp_ablation(model, layer_idx: int, proportion: float, seed: int=42):
+    #Number of hidden layers
+    num_layers = model.config.num_hidden_layers
+
+    if not 0 <= layer_idx < num_layers:
+        raise ValueError(f"layer_idx must be between 0 and {num_layers - 1}")
+    
+    if not 0 <= proportion <= 1.0:
+        raise ValueError(f"proportion must be between 0 and 1")
+    
     # MLP in layer layer_idx
     mlp = model.model.layers[layer_idx].mlp
 
