@@ -1,8 +1,9 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from schemas import *
 
-def run_generation(request:GenerationRequest):
-    return None
+def run_generation(model, tokenizer, request:ExperimentConfiguration):
+    shared_prompt = request.prompt
+    
 
 def generate_text(model, tokenizer, prompt:str, settings: GenerationSettings) -> str:
     messages = [

@@ -15,13 +15,15 @@ print(f"Startup through model loading: {time.perf_counter() - startup_start:.2f}
 @app.post("/generate", response_model=GenerateResponse)
 def generate(request:GenerateRequest):
 
-    settings = request.generation
     prompt = request.prompt
-    generated_text = generate_text(model, tokenizer, prompt, settings)
+    settings_a = request.configuration_a.generation
+    settings_b = request.configuration_b.generation
+    generated_text_a = generate_text(model, tokenizer, prompt, settings_a)
+    generated_text_b = generate_text(model, tokenizer, prompt, settings_b)
 
     return GenerateResponse(
-        baseline_text= generated_text,
-        experimental_text= generated_text,
-        baseline_latency_ms=3.33,
-        experimental_latency_ms=123.123,
+        condition_a_text= generated_text_a,
+        condition_b_text= generated_text_b,
+        condition_a_latency_ms=3.33,
+        condition_b_latency_ms=123.123,
     )

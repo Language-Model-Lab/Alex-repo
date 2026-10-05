@@ -5,16 +5,23 @@ class GenerateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     prompt: str = Field(min_length = 1, max_length=2000)
-    generation: GenerationSettings
-    intervention: InterventionSettings | None = None
+    configuration_a: ExperimentConfiguration
+    configuration_b: ExperimentConfiguration
+
 
 class GenerateResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
     
-    baseline_text: str
-    experimental_text: str
-    baseline_latency_ms: float
-    experimental_latency_ms: float
+    condition_a_text: str
+    condition_b_text: str
+    condition_a_latency_ms: float
+    condition_b_latency_ms: float
+
+class ExperimentConfiguration(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    generation: GenerationSettings
+    intervention: InterventionSettings | None = None
     
 class GenerationSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
