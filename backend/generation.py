@@ -1,8 +1,52 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from schemas import *
+from interventions import add_head_ablation, add_mlp_ablation
+from schemas import (
+   GenerationSettings,
+   InterventionSettings,
+   GenerateRequest,
+   GenerateResponse,
+   ExperimentConfiguration
+   )
 
-def run_generation(model, tokenizer, request:ExperimentConfiguration):
-    shared_prompt = request.prompt
+
+def run_generation(model, tokenizer, prompt: str, request:ExperimentConfiguration):
+    generation_settings = request.generation
+    intervention_settings = request.intervention
+    handles = []
+
+    try:
+        if intervention_settings is not None:
+            if intervention_settings.type == "mlp":
+                for layer_idx in intervention_settings.layers:
+                    handle, _, _, _ = add_mlp_ablation(
+                        model=model, 
+                        layer_idx=layer_idx, 
+                        proportion= intervention_settings.proportion, 
+                        seed=intervention_settings.seed
+                        )
+                    handles.append(handle)
+            elif intervention_settings.type == "attention":
+                for layer_idx in intervention_settings.layers:
+                    handle, _, _ = add_head_ablation(
+                        model=model, 
+                        layer_idx=layer_idx, 
+                        head_indices= intervention_settings.head_idxs, 
+                        )
+                    handles.append(handle)
+                        
+        model_response = generate_text(
+                                model=model, 
+                                tokenizer=tokenizer,
+                                prompt=prompt, 
+                                settings=generation_settings
+                                )
+    finally:
+        for handle in handles:
+            handle.remove()
+            
+    return model_response
+    
+
     
 
 def generate_text(model, tokenizer, prompt:str, settings: GenerationSettings) -> str:

@@ -4,7 +4,7 @@ startup_start = time.perf_counter()
 from fastapi import FastAPI
 from schemas import GenerateRequest, GenerateResponse
 from model import load_model
-from generation import generate_text
+from generation import generate_text, run_generation
 
 app = FastAPI()
 
@@ -16,10 +16,10 @@ print(f"Startup through model loading: {time.perf_counter() - startup_start:.2f}
 def generate(request:GenerateRequest):
 
     prompt = request.prompt
-    settings_a = request.configuration_a.generation
-    settings_b = request.configuration_b.generation
-    generated_text_a = generate_text(model, tokenizer, prompt, settings_a)
-    generated_text_b = generate_text(model, tokenizer, prompt, settings_b)
+    configuration_a = request.configuration_a
+    configuration_b = request.configuration_b
+    generated_text_a = run_generation(model, tokenizer, prompt, configuration_a)
+    generated_text_b = run_generation(model, tokenizer, prompt, configuration_b)
 
     return GenerateResponse(
         condition_a_text= generated_text_a,
