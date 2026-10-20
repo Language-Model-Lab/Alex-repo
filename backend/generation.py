@@ -1,5 +1,11 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM
 from interventions import add_head_ablation, add_mlp_ablation
+import torch
+from transformers import (
+    AutoTokenizer, 
+    AutoModelForCausalLM, 
+    StoppingCriteria, 
+    StoppingCriteriaList
+    )
 from schemas import (
    GenerationSettings,
    InterventionSettings,
@@ -7,6 +13,32 @@ from schemas import (
    GenerateResponse,
    ExperimentConfiguration
    )
+
+class SentenceBoundaryCriteria(StoppingCriteria):
+    def __init__(self, tokenizer, prompt_length, soft_limit):
+        self.tokenizer = tokenizer
+        self.prompt_length = prompt_length
+        self.soft_limit = soft_limit
+    def __call__(self, input_ids, scores, **kwargs):
+        generated_ids = input_ids[:, self.prompt_length:]
+
+        if generated_ids.shape[1] < self.soft_limit:
+            return torch.zeros(
+                input_ids.shape[0],
+                dtype=torch.bool,
+                device=input_ids.device,
+                )
+        
+        stop_conditions = []
+        for sequence in generated_ids:
+            text = self.tokenizer.decode(sequence, skip_special_tokens=True)
+            stop_conditions.append(text.rstrip().endswith(('.', '?', '!')))
+        
+        return torch.tensor(
+                stop_conditions,
+                dtype=torch.bool,
+                device=input_ids.device,
+                )
 
 
 def run_generation(model, tokenizer, prompt: str, request:ExperimentConfiguration):
@@ -63,10 +95,18 @@ def generate_text(model, tokenizer, prompt:str, settings: GenerationSettings) ->
         enable_thinking=settings.enable_thinking,
     ).to(model.device)
 
+    hard_limit = int(settings.max_new_tokens*1.25)
+    criteria = SentenceBoundaryCriteria(
+            tokenizer=tokenizer, 
+            prompt_length=inputs["input_ids"].shape[-1],
+            soft_limit=settings.max_new_tokens
+            )
+
     generation_kwargs = {
-        "max_new_tokens": settings.max_new_tokens,
+        "max_new_tokens": hard_limit,
         "do_sample": settings.do_sample,
         "repetition_penalty": settings.repetition_penalty,
+        "stopping_criteria": [criteria]
         }
 
     if settings.do_sample:
