@@ -95,7 +95,12 @@ def generate_text(model, tokenizer, prompt:str, settings: GenerationSettings) ->
         enable_thinking=settings.enable_thinking,
     ).to(model.device)
 
+    #Absolute maximum amount of new tokens the model 
+    #is allowed to generate.
     hard_limit = int(settings.max_new_tokens*1.25)
+
+    #Custom stopping criteria to encourage stopping generation at 
+    #more natural points in sentences, rather than mid-sentence.
     criteria = SentenceBoundaryCriteria(
             tokenizer=tokenizer, 
             prompt_length=inputs["input_ids"].shape[-1],
